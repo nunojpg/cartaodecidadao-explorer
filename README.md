@@ -3,13 +3,13 @@ This is meant to demo reading a Cartão de Cidadão / PTEID (Portuguese eID card
 
 This script depends exclusively on Free/Open Source Middleware [OpenSC](https://github.com/OpenSC/OpenSC). The Portuguese Government also makes available a [Open Souce Middleware](https://svn.gov.pt/projects/ccidadao) which is not used here.
 
-There is no particular use case. You can validate the reading works and edit the script to your need.
+There is no particular use case. You can validate the reading works and edit the script to your need. You can also parse the result of this script, but that is not recommended or safe. No assurance is made for the stability of the output.
 
 Features or bug fixes pull requests are highly appreciated!
 
 ## Dependencies
 
-The features implemented require [OpenSC](https://github.com/OpenSC/OpenSC) with patchs commited on 2016-06-13, and is expected to only reach mainline with OpenSC 0.17.
+The features implemented require [OpenSC](https://github.com/OpenSC/OpenSC) with patchs on branch https://github.com/nunojpg/OpenSC/tree/pteid-work.
 
 Please download and compile [OpenSC](https://github.com/OpenSC/OpenSC) from source to use it.
 
@@ -20,7 +20,7 @@ sudo apt remove opensc #Make sure OpenSC distributions package are not installed
 sudo apt install autoconf libssl-dev pcscd libpcsclite-dev pkg-config
 git clone https://github.com/OpenSC/OpenSC.git
 cd OpenSC
-./configure --prefix=/usr
+./configure --prefix=/usr --sysconfdir=/etc/opensc
 make
 sudo make install
 ```
@@ -28,7 +28,7 @@ sudo make install
 Beside OpenSC the following other dependencies are required in a Debian/Ubuntu system:
 
 ```bash
-sudo apt install 
+sudo apt install <TBC>
 ```
 
 ## What it does and how to use it
@@ -45,12 +45,23 @@ This process requires Internet connectivity to verify the CRL for the full-chain
 
 This is a sample run (with some personal data replaced with generic):
 ```
-./read.sh 
+$./read-pteid.sh -h
+Usage: read-pteid.sh [-hacp]
+CARTAO DE CIDADAO EXPLORER
+Read, cryptographically authenticate data, and print it.
+
+    -h          display this help and exit
+    -a		Print all identification fields
+    -c          Disable CRL download
+    -p		Print photo ascii art
+
+
+$./read-pteid.sh -p 
 Waiting for a card to be inserted...
 Trying to find a PKCS#15 compatible card...
 Found CARTAO DE CIDADAO!
-driver for the Gemplus GemSAFE V1 applet
-PIN tries left [AUTH: 3] [SIGN: 3] [Address: 3]
+Gemalto GemSafe V1 applet
+PIN tries left        : [AUTH: 3] [SIGN: 3] [Address: 3]
 JOSÉ SÓCRATES CARVALHO PINTO DE SOUSA     06 09 1967
 99999999 9 ABC     01 01 2015     CRCiv. Evora
 KXXXXKKKXXXXXKKKXXXXKKKXXXXKKKKXXKKKKKKXKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
@@ -107,10 +118,10 @@ NWWNXXNWMMMWWWWWWNNWNNNNXXNNNXK0000OOO0KXXNWWMMWNKXWMWWWWWWWMMMMWXXXNWMMMMM
 
 ## TODO
 
-* Currently I am unable to do Card/Chip authentication like in the MRTD Biometric Passport AA (active authentication). This is supported by the PTEID, and is used by the official Middleware during Mutual Authentication (using a CVC), for example for the Address Change process. How it is done and if it is possible without a CVC is unknown.
-* Fingerprint Match-on-card applet is not supported in any way. 
 * Notepad writing is not implemented. I don't know if it uses a standard PKCS15 procedure.
 * Address parsing is not implemented. It is very easy to do. I just don't need it at this time.
 
+## LIMITATIONS
 
-
+* It is not possible to do Card/Chip authentication like in the MRTD Biometric Passport AA (active authentication). This is supported by the PTEID, and is used by the official Middleware during Mutual Authentication (using a CVC), for example for the Address Change process, and it is not possible by the general public.
+* Fingerprint Match-on-card applet is not supported in any way. Patches or documentation are greatly appreciated!
