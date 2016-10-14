@@ -28,7 +28,7 @@ sudo make install
 Beside OpenSC the following other dependencies are required in a Debian/Ubuntu system:
 
 ```bash
-sudo apt install <TBC>
+sudo apt install openjpeg-tools jp2a
 ```
 
 ## What it does and how to use it
