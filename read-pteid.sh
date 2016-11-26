@@ -39,7 +39,16 @@ remove_file() {
 	[ -a "$1" ]&& rm "$1"
 }
 
-# Usage info
+check_package() {
+	which "${1}" > /dev/null && return
+cat << EOF
+Can't find "${1}".
+Please install it. Eg. in Ubuntu type:
+sudo apt install "${2}"
+EOF
+	exit 1
+}
+
 show_help() {
 cat << EOF
 Usage: ${0##*/} [-hacp]
@@ -72,6 +81,7 @@ while getopts "hpac" opt; do
     esac
 done
 
+check_package "pkcs15-tool" "opensc"
 
 pins_list="$(pkcs15-tool --wait --verbose --list-pins 2> >(tee $filename_opensc_cardsearch >&2))"
 
@@ -236,9 +246,11 @@ if ! $print_all_fields ; then
 	[ -n "$AccidentalIndications" ] && echo $AccidentalIndications	# IF Accidental Indications exist, they are usually very significative so always print them!
 fi
 
+check_package "j2k_to_image" "openjpeg-tools"
 j2k_to_image -i "${folder}/$filename_photo_jp2" -o "${folder}/$filename_photo_bmp" > /dev/null 2>&1
 convert "${folder}/$filename_photo_bmp" "${folder}/$filename_photo_jpg"
 if "$print_photo_ascii" ; then
+	check_package "jp2a" "jp2a"
 	jp2a "${folder}/$filename_photo_jpg" --height=50
 fi
 #eog "${folder}/$filename_photo_bmp"
