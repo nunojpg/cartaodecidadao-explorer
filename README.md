@@ -9,11 +9,11 @@ Features or bug fixes pull requests are highly appreciated!
 
 ## Dependencies
 
-The features implemented require [OpenSC](https://github.com/OpenSC/OpenSC) with patchs on branch https://github.com/nunojpg/OpenSC/tree/pteid-work.
+The features implemented require [OpenSC](https://github.com/OpenSC/OpenSC) with patches commited on 2016-11-08.
 
-Please download and compile [OpenSC](https://github.com/OpenSC/OpenSC) from source to use it.
+For Ubuntu this might reach the default package by version 17.04. For now please download and compile [OpenSC](https://github.com/OpenSC/OpenSC) from source to use it.
 
-Ubuntu 16.04 example:
+Ubuntu 16.10 example:
 
 ```bash
 sudo apt remove opensc #Make sure OpenSC distributions package are not installed
