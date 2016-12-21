@@ -163,8 +163,10 @@ mv "cache/$filename_sod" "$folder"
 #mv "cache/$filename_trace" "$folder"
 
 # Read Photo
-
-dd if="${folder}/$filename_citizen_data" iflag=skip_bytes status=none count=1 skip=1583 bs=14128 | xxd -p | tr -d '\n' | sed 's/\(00\)*$//' | xxd -p -r > "${folder}/$filename_photo_jp2"
+# photo starts at offset 1583 and goes until the end of the file
+# since the file is 15500 bytes long, the maximum photo size is 13917.
+# removing trailing zero bytes reduces my photo to 13023
+dd if="${folder}/$filename_citizen_data" status=none skip=1 bs=1583 | xxd -p | tr -d '\n' | sed 's/\(00\)*$//' | xxd -p -r > "${folder}/$filename_photo_jp2"
 
 # Read Address
 
@@ -199,8 +201,11 @@ hash_id="$({
 	} | sha256sum -b | head -c 64)"
 
 hash_document_key="$(dd if="${folder}/$filename_citizen_data" iflag=skip_bytes status=none count=1 skip=1372 bs=131 | sha256sum -b | head -c 64)"
-#we need to trim the photo trailing zeros. I didn't find a easy way for this, beside converting it to hexadecimal form first
-hash_photo="$(dd if="${folder}/$filename_citizen_data" iflag=skip_bytes status=none count=1 skip=1503 bs=14208 | xxd -p | tr -d '\n' | sed 's/\(00\)*$//' | xxd -p -r | sha256sum -b | head -c 64)"
+
+# photo including heading starts at offset 1503 and goes until the end of the file
+# for the hash we need the heading and to remove trailing zeros
+# I didn't find a easy way for this, beside converting it to hexadecimal form first
+hash_photo="$(dd if="${folder}/$filename_citizen_data" status=none skip=1 bs=1503 | xxd -p | tr -d '\n' | sed 's/\(00\)*$//' | xxd -p -r | sha256sum -b | head -c 64)"
 
 
 ## NOT IMPLEMENTED
