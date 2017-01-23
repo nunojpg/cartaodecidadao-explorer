@@ -51,7 +51,7 @@ EOF
 
 show_help() {
 cat << EOF
-Usage: ${0##*/} [-hacp]
+Usage: ${0##*/} [-habcp]
 CARTAO DE CIDADAO EXPLORER
 Read, cryptographically authenticate data, and print it.
 

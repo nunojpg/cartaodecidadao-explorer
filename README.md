@@ -46,15 +46,15 @@ This process requires Internet connectivity to verify the CRL for the full-chain
 This is a sample run (with some personal data replaced with generic):
 ```
 $./read-pteid.sh -h
-Usage: read-pteid.sh [-hacp]
+Usage: read-pteid.sh [-habcp]
 CARTAO DE CIDADAO EXPLORER
 Read, cryptographically authenticate data, and print it.
 
     -h          display this help and exit
     -a		Print all identification fields
+    -b		Print address
     -c          Disable CRL download
     -p		Print photo ascii art
-
 
 $./read-pteid.sh -p 
 Waiting for a card to be inserted...
@@ -119,7 +119,6 @@ NWWNXXNWMMMWWWWWWNNWNNNNXXNNNXK0000OOO0KXXNWWMMWNKXWMWWWWWWWMMMMWXXXNWMMMMM
 ## TODO
 
 * Notepad writing is not implemented. I don't know if it uses a standard PKCS15 procedure.
-* Address parsing is not implemented. It is very easy to do. I just don't need it at this time.
 
 ## LIMITATIONS
 
