@@ -55,6 +55,7 @@ Read, cryptographically authenticate data, and print it.
     -b		Print address
     -c          Disable CRL download
     -p		Print photo ascii art
+    -s		Print SOD values
 
 $./read-pteid.sh -p 
 Waiting for a card to be inserted...

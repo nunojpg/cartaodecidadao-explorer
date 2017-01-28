@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2016, Nuno Goncalves <nunojpg@gmail.com>
+# Copyright (C) 2016-2017, Nuno Goncalves <nunojpg@gmail.com>
 
 # trace and notepad objects are not validated by SOD
 # we verify the SOD certificate with CRL but not OCSP because OpenSSL command line tool doesn't allow it easily
@@ -13,16 +13,14 @@ error=false
 print_all_fields=false
 print_photo_ascii=false
 read_address=false
+print_sod_values=false
 download_crl=true
 
 filename_opensc_cardsearch="opensc_cardsearch"
 filename_citizen_data="object_citizen_data"
 filename_citizen_address="object_citizen_address"
 filename_sod="object_SOD"
-#filename_trace="object_trace"
-filename_sod_pkcs7_der="document_sign_pkcs7.der"
-filename_sod_certificate_pem="document_sign_certificate.pem"
-filename_hashes_der="sod_hashes.der"
+filename_sod_certificate="document_sign_certificate"
 filename_photo_jp2="photo.jp2"
 filename_photo_bmp="photo.bmp"
 filename_photo_jpg="photo.jpg"
@@ -60,10 +58,11 @@ Read, cryptographically authenticate data, and print it.
     -b		Print address
     -c          Disable CRL download
     -p		Print photo ascii art
+    -s		Print SOD values
 EOF
 }
 
-while getopts "hpabc" opt; do
+while getopts "hpabcs" opt; do
     case "$opt" in
         h)
             show_help
@@ -76,6 +75,8 @@ while getopts "hpabc" opt; do
 	c)  download_crl=false
 	    ;;
         p)  print_photo_ascii=true
+            ;;
+	s)  print_sod_values=true
             ;;        
         '?')
             show_help >&2
@@ -104,10 +105,7 @@ printf 'PIN tries left        : [AUTH: %s] [SIGN: %s] [Address: %s]\n' "$auth" "
 remove_file "$filename_citizen_data"
 remove_file "$filename_citizen_address"
 remove_file "$filename_sod"
-remove_file "$filename_trace"
-remove_file "$filename_sod_pkcs7_der"
-remove_file "$filename_sod_certificate_pem"
-remove_file "$filename_hashes_der"
+remove_file "$filename_sod_certificate"
 remove_file "$filename_photo_jp2"
 remove_file "$filename_photo_bmp"
 
@@ -210,7 +208,7 @@ do
 	output="$(dd if=cache/$filename_citizen_address iflag=skip_bytes status=none count=1 skip=${fields_offsets[i]} bs=$((${fields_offsets[$((i+1))]}-${fields_offsets[i]})))"
 	eval "$field=\"$output\""
 	((i++))
-	if $print_all_fields ; then
+	if $read_address ; then
 		printf '%-22s: %s\n' "$field" "${!field}"
 	fi
 done
@@ -219,20 +217,20 @@ fi
 
 # Save files
 
-folder="cache/${DocumentNumberPAN}_$Name $Surname"
-mkdir -p "$folder"
-mv "cache/$filename_citizen_data" "$folder"
+f="cache/${DocumentNumberPAN}_$Name $Surname"
+mkdir -p "$f"
+mv "cache/$filename_citizen_data" "$f"
 if $read_address ; then
-	mv "cache/$filename_citizen_address" "$folder"
+	mv "cache/$filename_citizen_address" "$f"
 fi
-mv "cache/$filename_sod" "$folder"
-#mv "cache/$filename_trace" "$folder"
+mv "cache/$filename_sod" "$f"
+#mv "cache/$filename_trace" "$f"
 
 # Read Photo
 # photo starts at offset 1583 and goes until the end of the file
 # since the file is 15500 bytes long, the maximum photo size is 13917.
 # removing trailing zero bytes reduces my photo to 13023
-dd if="${folder}/$filename_citizen_data" status=none skip=1 bs=1583 | xxd -p | tr -d '\n' | sed 's/\(00\)*$//' | xxd -p -r > "${folder}/$filename_photo_jp2"
+dd if="${f}/$filename_citizen_data" status=none skip=1 bs=1583 | xxd -p | tr -d '\n' | sed 's/\(00\)*$//' | xxd -p -r > "${f}/$filename_photo_jp2"
 
 # HASHES
 #the hash order is not the same as the fields are read, so we list them manually.
@@ -263,12 +261,12 @@ hash_id="$({
 	echo -n $HealthNo
 	} | sha256sum -b | head -c 64)"
 
-hash_document_key="$(dd if="${folder}/$filename_citizen_data" iflag=skip_bytes status=none count=1 skip=1372 bs=131 | sha256sum -b | head -c 64)"
+hash_document_key="$(dd if="${f}/$filename_citizen_data" iflag=skip_bytes status=none count=1 skip=1372 bs=131 | sha256sum -b | head -c 64)"
 
 # photo including heading starts at offset 1503 and goes until the end of the file
 # for the hash we need the heading and to remove trailing zeros
 # I didn't find a easy way for this, beside converting it to hexadecimal form first
-hash_photo="$(dd if="${folder}/$filename_citizen_data" status=none skip=1 bs=1503 | xxd -p | tr -d '\n' | sed 's/\(00\)*$//' | xxd -p -r | sha256sum -b | head -c 64)"
+hash_photo="$(dd if="${f}/$filename_citizen_data" status=none skip=1 bs=1503 | xxd -p | tr -d '\n' | sed 's/\(00\)*$//' | xxd -p -r | sha256sum -b | head -c 64)"
 
 if $is_address_foreign ; then
 hash_address="$({
@@ -306,59 +304,38 @@ hash_address="$({
 	} | sha256sum -b | head -c 64)"
 fi
 
-	
-#	if (isNational){
-#		cb.Append((unsigned char*)m_CountryCode.c_str(),m_CountryCode.length());
-#		cb.Append((unsigned char*)m_DistrictCode.c_str(),m_DistrictCode.length());
-#		cb.Append((unsigned char*)m_DistrictDescription.c_str(),m_DistrictDescription.length());
-#		cb.Append((unsigned char*)m_MunicipalityCode.c_str(),m_MunicipalityCode.length());
-#		cb.Append((unsigned char*)m_MunicipalityDescription.c_str(),m_MunicipalityDescription.length());
-#		cb.Append((unsigned char*)m_CivilParishCode.c_str(),m_CivilParishCode.length());
-#		cb.Append((unsigned char*)m_CivilParishDescription.c_str(),m_CivilParishDescription.length());
-#		cb.Append((unsigned char*)m_AbbrStreetType.c_str(),m_AbbrStreetType.length());
-#		cb.Append((unsigned char*)m_StreetType.c_str(),m_StreetType.length());
-#		cb.Append((unsigned char*)m_StreetName.c_str(),m_StreetName.length());
-#		cb.Append((unsigned char*)m_AbbrBuildingType.c_str(),m_AbbrBuildingType.length());
-#		cb.Append((unsigned char*)m_BuildingType.c_str(),m_BuildingType.length());
-#		cb.Append((unsigned char*)m_DoorNo.c_str(),m_DoorNo.length());
-#		cb.Append((unsigned char*)m_Floor.c_str(),m_Floor.length());
-#		cb.Append((unsigned char*)m_Side.c_str(),m_Side.length());
-#		cb.Append((unsigned char*)m_Place.c_str(),m_Place.length());
-#		cb.Append((unsigned char*)m_Locality.c_str(),m_Locality.length());
-#		cb.Append((unsigned char*)m_Zip4.c_str(),m_Zip4.length());
-#		cb.Append((unsigned char*)m_Zip3.c_str(),m_Zip3.length());
-#		cb.Append((unsigned char*)m_PostalLocality.c_str(),m_PostalLocality.length());
-#		cb.Append((unsigned char*)m_Generated_Address_Code.c_str(),m_Generated_Address_Code.length());
-#	} else {
-#		cb.Append((unsigned char*)m_Foreign_Country.c_str(),m_Foreign_Country.length());
-#		cb.Append((unsigned char*)m_Foreign_Generic_Address.c_str(),m_Foreign_Generic_Address.length());
-#		cb.Append((unsigned char*)m_Foreign_City.c_str(),m_Foreign_City.length());
-#		cb.Append((unsigned char*)m_Foreign_Region.c_str(),m_Foreign_Region.length());
-#		cb.Append((unsigned char*)m_Foreign_Locality.c_str(),m_Foreign_Locality.length());
-#		cb.Append((unsigned char*)m_Foreign_Postal_Code.c_str(),m_Foreign_Postal_Code.length());
-#		cb.Append((unsigned char*)m_Generated_Address_Code.c_str(),m_Generated_Address_Code.length());
-#	}
-
 # SOD
 
-# Ignoring the first 4 bytes allows us to parse the SOD file as a PKCS7 object
-tail -c+5 "${folder}/$filename_sod" > "${folder}/$filename_sod_pkcs7_der"
-
-# Verify Data and Certificate signatures
-openssl smime -inform DER -in "${folder}/$filename_sod_pkcs7_der" -verify -CApath CA/ > "${folder}/$filename_hashes_der" 2> /dev/null \
-		|| { echo "SOD INVALID"; exit 1; }
-
-# Extract certificate and convert to PEM
-openssl pkcs7 -inform DER -in "${folder}/$filename_sod_pkcs7_der" -print_certs > "${folder}/$filename_sod_certificate_pem"
+# Ignoring the first 4 bytes allows us to parse the SOD file as a CMS/PKCS7 object
+# Verify certificate and data signature, extract certificate
+tail -c+5 "${f}/$filename_sod" | \
+openssl cms -cmsout -inform DER -verify -CApath CA/ -certsout "${f}/$filename_sod_certificate" > /dev/null || { echo "SOD INVALID"; exit 1; }
 
 # Verify Certificate signature (again) and CRL (requires internet connection)
-[ "$download_crl" = "true" ] && openssl verify -verbose -crl_download -crl_check -CApath CA/ "${folder}/$filename_sod_certificate_pem" > /dev/null \
-		|| { echo "UNABLE TO VERIFY CRL"; exit 1; }		
+[ "$download_crl" = "true" ] && \
+openssl verify -verbose -crl_download -crl_check -CApath CA/ "${f}/$filename_sod_certificate" > /dev/null || { echo "UNABLE TO VERIFY CRL"; exit 1; }		
 
-hash_id_sod="$(dd if="${folder}/$filename_hashes_der" iflag=skip_bytes status=none count=1 skip=31 bs=32 | xxd -p -c 32)"
-hash_address_sod="$(dd if="${folder}/$filename_hashes_der" iflag=skip_bytes status=none count=1 skip=70 bs=32 | xxd -p -c 32)"
-hash_photo_sod="$(dd if="${folder}/$filename_hashes_der" iflag=skip_bytes status=none count=1 skip=109 bs=32 | xxd -p -c 32)"
-hash_document_key_sod="$(dd if="${folder}/$filename_hashes_der" iflag=skip_bytes status=none count=1 skip=148 bs=32 | xxd -p -c 32)"
+hash_id_sod=\
+"$(dd if="${f}/$filename_sod" iflag=skip_bytes status=none count=1 skip=95 bs=32 | xxd -p -c 32)"
+
+hash_address_sod=\
+"$(dd if="${f}/$filename_sod" iflag=skip_bytes status=none count=1 skip=134 bs=32 | xxd -p -c 32)"
+
+hash_photo_sod=\
+"$(dd if="${f}/$filename_sod" iflag=skip_bytes status=none count=1 skip=173 bs=32 | xxd -p -c 32)"
+
+hash_document_key_sod=\
+"$(dd if="${f}/$filename_sod" iflag=skip_bytes status=none count=1 skip=212 bs=32 | xxd -p -c 32)"
+
+if $print_sod_values ; then
+	echo "Computed hash							 SOD"
+	echo "$hash_id $hash_id_sod"
+	if $read_address ; then
+		echo "$hash_address $hash_address_sod"
+	fi
+	echo "$hash_photo $hash_photo_sod"
+	echo "$hash_document_key $hash_document_key_sod"
+fi
 
 [ "$hash_id" = "$hash_id_sod" ]				|| { echo "ID data TAMPERED!"; error=true; }
 if $read_address ; then
@@ -380,10 +357,10 @@ if ! $print_all_fields ; then
 fi
 
 check_package "opj_decompress" "libopenjp2-tools"
-opj_decompress -i "${folder}/$filename_photo_jp2" -o "${folder}/$filename_photo_bmp" > /dev/null 2>&1
-convert "${folder}/$filename_photo_bmp" "${folder}/$filename_photo_jpg"
+opj_decompress -i "${f}/$filename_photo_jp2" -o "${f}/$filename_photo_bmp" > /dev/null 2>&1
+convert "${f}/$filename_photo_bmp" "${f}/$filename_photo_jpg"
 if $print_photo_ascii ; then
 	check_package "jp2a" "jp2a"
-	jp2a "${folder}/$filename_photo_jpg" --height=50
+	jp2a "${f}/$filename_photo_jpg" --height=50
 fi
 #eog "${folder}/$filename_photo_bmp"
