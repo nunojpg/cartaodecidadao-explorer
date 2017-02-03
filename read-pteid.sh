@@ -312,11 +312,13 @@ tail -c+5 "$fn_SOd" | \
 openssl cms -cmsout -inform DER -verify -CApath CA/ -certsout "$fn_SOd_cert" > /dev/null || { echo "SOd INVALID"; exit 1; }
 
 # Verify (online) OCSP
+echo -n "Document certificate OCSP : "
 if $do_online_OCSP ; then
 	OCSP_URI="$(openssl x509 -in "$fn_SOd_cert" -noout -ocsp_uri)"
 	ISSUER_HASH="$(openssl x509 -in "$fn_SOd_cert" -noout -issuer_hash)"
-	echo -n "Document certificate OCSP : "
 	openssl ocsp -issuer "CA/${ISSUER_HASH}.0" -CApath CA/ -url "$OCSP_URI" -cert "$fn_SOd_cert" > /dev/null || { echo "UNABLE TO VERIFY OCSP"; exit 1; }
+else
+	echo "Verification DISABLED"
 fi
 
 echo #new line
