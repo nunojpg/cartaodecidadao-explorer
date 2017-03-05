@@ -9,9 +9,9 @@ Features or bug fixes pull requests are highly appreciated!
 
 ## Dependencies
 
-The features implemented require [OpenSC](https://github.com/OpenSC/OpenSC) with patches commited on 2016-11-08.
+This version depends on [OpenSC](https://github.com/OpenSC/OpenSC) with patches commited on [2017-02-09](https://github.com/OpenSC/OpenSC/commit/4202ea25d0142fc2e4bafb59e61c5827ffa2a612).
 
-For Ubuntu this might reach the default package by version 17.04. For now please download and compile [OpenSC](https://github.com/OpenSC/OpenSC) from source to use it.
+For Ubuntu this is expected to reach the distributed package by version 18.04. For now please download and compile [OpenSC](https://github.com/OpenSC/OpenSC) from source to use it.
 
 Ubuntu 16.10 example:
 
@@ -35,13 +35,13 @@ sudo apt install libopenjp2-tools jp2a
 
 The script will wait for a PTEID to be inserted, read the card, validate it and print some data.
 
-The validation is done by reading the SOD (Document Security Object), which contains a DSR (Document Signing Certificate) and hashes for the personal data on the card.
+The validation is done by reading the SOd (Security Object document), which contains a DSR (Document Signing Certificate) and hashes for the personal data on the card.
 
 The DSR is validated with the full-chain certificates available under [CA](./CA/). The Certification entity certificates for the DSR can be found [here](https://pki.cartaodecidadao.pt/publico/certificado/cc_ec_cidadao/). If you need to add any of them you can convert and hash them with [this](./CA/convert_and_hash.sh) script.
 
-Then the signed and validated hashes are compared against the personal data (except address since we are not reading it).
+Then the signed and validated hashes are compared against the personal data (and address if we are also reading it).
 
-This process requires Internet connectivity to verify the CRL for the full-chain certificates. This can be disabled on the script header.
+This process requires Internet connectivity for OCSP. This can be disabled with a command-line option.
 
 This is a sample run (with some personal data replaced with generic):
 ```
@@ -53,7 +53,7 @@ Read, cryptographically authenticate data, and print it.
     -h          display this help and exit
     -a		Print all identification fields
     -b		Print address
-    -c          Disable CRL download
+    -c          Disable OCSP
     -p		Print photo ascii art
     -s		Print SOD values
 
