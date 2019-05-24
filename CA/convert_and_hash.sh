@@ -5,6 +5,7 @@
 for filename in *.cer *.crt
 do
 	base_filename="${filename%.*}"
-	hash="$(openssl x509 -inform DER -in "$filename" -out "$base_filename".pem -hash)"
+	openssl x509 -inform DER -in "$filename" -out "$base_filename".pem
+	hash="$(openssl x509 -in "$base_filename".pem -hash -noout)"	
 	ln -s "$base_filename".pem "$hash".0
 done
