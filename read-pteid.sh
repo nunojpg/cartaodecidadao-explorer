@@ -147,14 +147,14 @@ fields_offsets=(0 40 120 154 182 214 230 250 310 330 450 570 572 578 598 606 624
 
 i=0
 for field in "${fields_data[@]}"; do
-	output="$(dd if=cache/$fn_obj_data iflag=skip_bytes status=none count=1 skip=${fields_offsets[i]} bs=$((${fields_offsets[$((i+1))]}-${fields_offsets[i]})))"
+	output="$(dd if=cache/$fn_obj_data iflag=skip_bytes status=none count=1 skip=${fields_offsets[i]} bs=$((${fields_offsets[$((i+1))]}-${fields_offsets[i]})) | tr -d '\0')"
 	eval "$field=\"$output\""
 	((i++))
 done
 
 if $read_address ; then
 
-addrType="$(dd if=cache/$fn_obj_address iflag=skip_bytes status=none count=1 skip=0 bs=2)"
+addrType="$(dd if=cache/$fn_obj_address iflag=skip_bytes status=none count=1 skip=0 bs=2 | tr -d '\0')"
 
 if [ "$addrType" = "N" ]; then
 	is_address_foreign=false;
@@ -200,7 +200,7 @@ fi
 
 i=0
 for field in "${fields_address[@]}"; do
-	output="$(dd if=cache/$fn_obj_address iflag=skip_bytes status=none count=1 skip=${fields_offsets[i]} bs=$((${fields_offsets[$((i+1))]}-${fields_offsets[i]})))"
+	output="$(dd if=cache/$fn_obj_address iflag=skip_bytes status=none count=1 skip=${fields_offsets[i]} bs=$((${fields_offsets[$((i+1))]}-${fields_offsets[i]})) | tr -d '\0')"
 	eval "$field=\"$output\""
 	((i++))
 done
