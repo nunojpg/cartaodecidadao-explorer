@@ -9,17 +9,20 @@ Features or bug fixes pull requests are highly appreciated!
 
 ## Dependencies
 
-This version depends on [OpenSC](https://github.com/OpenSC/OpenSC) with patches commited on [2017-02-09](https://github.com/OpenSC/OpenSC/commit/4202ea25d0142fc2e4bafb59e61c5827ffa2a612).
+This tool depends on [OpenSC](https://github.com/OpenSC/OpenSC) with minimum version 0.17. (Ubuntu 18.04 / Debian 10 buster)
 
-For Ubuntu this is expected to reach the distributed package by version 18.04. For now please download and compile [OpenSC](https://github.com/OpenSC/OpenSC) from source to use it.
+If you have a recent card (2019), you likely need version 0.20. (expected Ubuntu 20.04 / Debian 10 buster)
 
-Ubuntu 16.10 example:
+If you don't have the required version, just download and compile [OpenSC](https://github.com/OpenSC/OpenSC) from source to use it.
+
+Ubuntu 18.04 example:
 
 ```bash
-sudo apt remove opensc #Make sure OpenSC distributions package are not installed
+sudo apt remove opensc #Make sure OpenSC distributions package is not installed
 sudo apt install autoconf libssl-dev pcscd libpcsclite-dev pkg-config
-git clone https://github.com/OpenSC/OpenSC.git
-cd OpenSC
+wget https://github.com/OpenSC/OpenSC/releases/download/0.20.0/opensc-0.20.0.tar.gz
+tar -xf opensc-0.20.0.tar.gz
+cd opensc-0.20.0
 ./configure --prefix=/usr --sysconfdir=/etc/opensc
 make
 sudo make install
@@ -57,7 +60,7 @@ Read, cryptographically authenticate data, and print it.
     -p		Print photo ascii art
     -s		Print SOD values
 
-$./read-pteid.sh -p 
+$./read-pteid.sh -p
 Waiting for a card to be inserted...
 Trying to find a PKCS#15 compatible card...
 Found CARTAO DE CIDADAO!
