@@ -9,9 +9,9 @@ Features or bug fixes pull requests are highly appreciated!
 
 ## Dependencies
 
-This tool depends on [OpenSC](https://github.com/OpenSC/OpenSC) with minimum version 0.17. (Ubuntu 18.04 / Debian 10 buster)
+This tool depends on [OpenSC](https://github.com/OpenSC/OpenSC).
 
-If you have a recent card (2019), you likely need version 0.20. (expected Ubuntu 20.04 / Debian 10 buster)
+Recent cards are tested to work with OpenSC 0.20 version. (eg. Ubuntu 20.04, Debian testing/11)
 
 If you don't have the required version, just download and compile [OpenSC](https://github.com/OpenSC/OpenSC) from source to use it.
 
